@@ -22,7 +22,11 @@
         "format-icons": {
             "active": " ",
         },
-        "sort-by-number": true
+        "sort-by-number": true,
+        
+       "persistent-workspaces": {
+         "*": [1, 2, 3, 4]
+       }
     },
     "clock": {
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",

@@ -1,0 +1,7 @@
+github-desktop-bin
+graphite-gtk-theme
+hyprshot
+webcord
+wlogout
+yay-git
+yay-git-debug
