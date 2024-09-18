@@ -1,7 +1,11 @@
+cava
 github-desktop-bin
 graphite-gtk-theme
 hyprshot
+snapd
+termius
 webcord
 wlogout
+xdg-desktop-portal-hyprland-git
 yay-git
 yay-git-debug
