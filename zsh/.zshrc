@@ -73,7 +73,9 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 
 # Aliases
+alias vpn='~/Downloads/Hiddify-Linux-x64.AppImage'
 alias ls='ls --color'
+alias ll='ls -latr'
 alias vim='nvim'
 alias c='clear'
 # Shell integrations
