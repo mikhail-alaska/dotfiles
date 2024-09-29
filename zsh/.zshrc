@@ -73,13 +73,20 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 
 # Aliases
-alias vpn='~/Downloads/Hiddify-Linux-x64.AppImage'
+alias vpn='nekobox'
 alias ls='ls --color'
 alias ll='ls -latr'
 alias vim='nvim'
 alias c='clear'
+alias inv='nvim $(fzf -m --preview="bat --color=always {}")'
 # Shell integrations
 eval "$(fzf --zsh)"
 eval "$(zoxide init --cmd cd zsh)"
 
 export PATH=$PATH:$HOME/.local/bin
+
+## [Completion]
+## Completion scripts setup. Remove the following line to uninstall
+[[ -f /home/alaska/.dart-cli-completion/zsh-config.zsh ]] && . /home/alaska/.dart-cli-completion/zsh-config.zsh || true
+## [/Completion]
+
