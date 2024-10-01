@@ -1,7 +1,10 @@
 cava
+expressvpn
 github-desktop-bin
 graphite-gtk-theme
+hiddify-next
 hyprshot
+nekoray
 snapd
 termius
 webcord
