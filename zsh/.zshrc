@@ -11,7 +11,6 @@ fi
 
 
 
-
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
 
@@ -79,6 +78,7 @@ alias ll='ls -latr'
 alias vim='nvim'
 alias c='clear'
 alias inv='nvim $(fzf -m --preview="bat --color=always {}")'
+alias wpscan='/home/alaska/.local/share/gem/ruby/3.3.0/bin/wpscan'
 # Shell integrations
 eval "$(fzf --zsh)"
 eval "$(zoxide init --cmd cd zsh)"
