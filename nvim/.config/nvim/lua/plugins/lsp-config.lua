@@ -14,7 +14,7 @@ return {
         },
         config = function()
             require("mason-lspconfig").setup({
-                ensure_installed = { "lua_ls", "clangd", "pylsp" }
+                ensure_installed = { "lua_ls", "clangd", "pylsp", "gopls"}
             })
         end
 
@@ -28,6 +28,9 @@ return {
                 capabilities = capabilities
             })
 
+            lspconfig.gopls.setup({
+                capabilities = capabilities
+            })
             lspconfig.pylsp.setup({
                 capabilities = capabilities
             })

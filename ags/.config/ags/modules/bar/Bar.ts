@@ -58,7 +58,7 @@ const getLayoutForMonitor = (monitor: number, layouts: BarLayouts): BarLayout =>
     return {
         left: ['dashboard', 'workspaces', 'windowtitle'],
         middle: ['media'],
-        right: ['volume', 'network', 'bluetooth', 'battery', 'systray', 'clock', 'notifications'],
+        right: ['volume', 'network', 'bluetooth', 'battery', 'clock', 'notifications'],
     };
 };
 
@@ -81,7 +81,6 @@ const widget = {
     network: (): Button<Child, Attribute> => WidgetContainer(Network()),
     bluetooth: (): Button<Child, Attribute> => WidgetContainer(Bluetooth()),
     clock: (): Button<Child, Attribute> => WidgetContainer(Clock()),
-    systray: (): Button<Child, Attribute> => WidgetContainer(SysTray()),
     ram: (): Button<Child, Attribute> => WidgetContainer(Ram()),
     cpu: (): Button<Child, Attribute> => WidgetContainer(Cpu()),
     cputemp: (): Button<Child, Attribute> => WidgetContainer(CpuTemp()),

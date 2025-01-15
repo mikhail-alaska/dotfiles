@@ -12,10 +12,10 @@
         //}
         "source": "~/.config/fastfetch/anime40.jpg",
         "type": "kitty",
-        "height": 16,
-        "width": 26,
+        "height": 14,
+        "width": 24,
         "padding": {
-            "top": 4,
+            "top": 1,
            "left": 4
         }
     },
@@ -23,7 +23,7 @@
         "break",
         {
             "type": "custom",
-            "format": "┌────────────────────── Hardware ──────────────────────┐",
+            "format": "┌────────────────── Hardware ──────────────────┐",
             "outputColor": "red"
         },
         {
@@ -40,23 +40,23 @@
         },
         {
             "type": "gpu",
-            "key": "│ ├󰍛 GPU",
+            "key": "│ ├󰍛GPU",
             "keyColor": "green"
         },
-        {
-            "type": "memory",
-            "key": "└ └󰍛 Memory",
-            "keyColor": "green"
-        },
+        //{
+        //    "type": "memory",
+        //    "key": "└ └󰍛 Memory",
+        //    "keyColor": "green"
+        //},
         {
             "type": "custom",
-            "format": "└──────────────────────────────────────────────────────┘",
+            "format": "└──────────────────────────────────────────────┘",
             "outputColor": "red"
         },
         "break",
         {
             "type": "custom",
-            "format": "┌────────────────────── Software ──────────────────────┐",
+            "format": "┌────────────────── Software ──────────────────┐",
             "outputColor": "red"
         },
         {
@@ -69,16 +69,11 @@
             "key": "│ ├ Kernel",
             "keyColor": "yellow"
         },
-        {
-            "type": "packages",
-            "key": "│ ├󰏖 Packages",
-            "keyColor": "yellow"
-        },
-        {
-            "type": "shell",
-            "key": "│ ├ Shell",
-            "keyColor": "yellow"
-        },
+        //{
+        //    "type": "packages",
+        //    "key": "│ ├󰏖 Packages",
+        //    "keyColor": "yellow"
+        //},
         {
             "type": "command",
             "key": "│ ├ OS Age",
@@ -96,9 +91,14 @@
             "key": " DE",
             "keyColor": "blue"
         },
+        //{
+        //    "type": "lm",
+        //    "key": "│ ├ LM",
+        //    "keyColor": "blue"
+        //},
         {
-            "type": "lm",
-            "key": "│ ├ LM",
+            "type": "shell",
+            "key": "│ ├ Shell",
             "keyColor": "blue"
         },
         {
@@ -106,12 +106,12 @@
             "key": "│ ├ WM",
             "keyColor": "blue"
         },
-        {
-            "type": "gpu",
-            "key": "│ ├󰍛 GPU Driver",
-            "format": "{3}",
-            "keyColor": "blue"
-        },
+        //{
+        //    "type": "gpu",
+        //    "key": "│ ├󰍛 GPU Driver",
+        //    "format": "{3}",
+        //    "keyColor": "blue"
+        //},
         {
             "type": "wmtheme",
             "key": "└ └󰉼 Theme",
@@ -120,13 +120,13 @@
 
         {
             "type": "custom",
-            "format": "└────────────────────────────────────────────────────┘",
+            "format": "└────────────────────────────────────────────┘",
             "outputColor": "red"
         },
-        {
-            "type": "custom",
-            "format": "               \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m "
-        },
+        //{
+        //    "type": "custom",
+        //    "format": "               \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m "
+        //},
         "break",
     ]
 }

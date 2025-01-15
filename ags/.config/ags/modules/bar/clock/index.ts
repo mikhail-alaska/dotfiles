@@ -1,3 +1,4 @@
+
 import Gdk from 'gi://Gdk?version=3.0';
 import GLib from 'gi://GLib';
 import { openMenu } from '../utils.js';
@@ -8,13 +9,16 @@ import Button from 'types/widgets/button.js';
 import { Attribute, Child } from 'lib/types/widget.js';
 import { runAsyncCommand, throttledScrollHandler } from 'customModules/utils.js';
 
-const { format, icon, showIcon, showTime, rightClick, middleClick, scrollUp, scrollDown } = options.bar.clock;
+const { icon, showIcon, showTime, rightClick, middleClick, scrollUp, scrollDown } = options.bar.clock;
 const { style } = options.theme.bar.buttons;
+
+// Формат для сокращенного дня недели, месяца и времени
+const dateTimeFormat = "%a, %d %b, %H:%M";
 
 const date = Variable(GLib.DateTime.new_now_local(), {
     poll: [1000, (): DateTime => GLib.DateTime.new_now_local()],
 });
-const time = Utils.derive([date, format], (c, f) => c.format(f) || '');
+const time = Utils.derive([date], (c) => c.format(dateTimeFormat) || '');
 
 const Clock = (): BarBoxChild => {
     const clockTime = Widget.Label({
