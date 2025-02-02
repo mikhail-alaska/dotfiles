@@ -1,5 +1,3 @@
-yo
-
 alsa-firmware
 alsa-utils
 base
