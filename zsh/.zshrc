@@ -83,6 +83,7 @@ alias vim='nvim'
 alias c='clear'
 alias inv='nvim $(fzf -m --preview="bat --color=always {}")'
 alias wpscan='/home/alaska/.local/share/gem/ruby/3.3.0/bin/wpscan'
+alias lock='hyprlock'
 # Shell integrations
 eval "$(fzf --zsh)"
 eval "$(zoxide init --cmd cd zsh)"
