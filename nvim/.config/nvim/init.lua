@@ -50,7 +50,7 @@ vim.keymap.set("n", "<leader>tb", "<cmd>tabnew %<CR>", {})
 
 vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")
 vim.keymap.set("t", "jk", "<c-\\><c-n>")
-vim.keymap.set("n", "jk", "<Esc>")
+vim.keymap.set("i", "jk", "<Esc>")
 
 local job_id = 0
 vim.keymap.set("n", "<space>ss", function()
