@@ -11,11 +11,11 @@ return {
             nvimtree = true,
             treesitter = true,
         },
-        --color_overrides = {
-         --   all = {
-          --      surface1 = "#11111b",
-           --     },
-        --},
+        color_overrides = {
+            all = {
+                surface1 = "#11111b",
+                },
+        },
       })
       vim.cmd.colorscheme "catppuccin-mocha"
     end
