@@ -14,19 +14,11 @@ return {
                 color_overrides = {
                     all = {
                         surface1 = "#11111b",
+                        background_colour = "#000000"
                     },
                 },
             })
             vim.cmd.colorscheme "catppuccin-mocha"
         end
     },
-    opts = {
-        -- regular opts
-    },
-    config = function(_, opts)
-        require('notify').setup(vim.tbl_extend('keep', {
-            -- other stuff
-            background_colour = "#000000"
-        }, opts))
-    end
 }
