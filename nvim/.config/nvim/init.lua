@@ -138,3 +138,7 @@ vim.keymap.set("n", "<leader>tt", ":Floaterminal<CR>", {})
 
 vim.keymap.set("n", "<leader>mt", "<cmd>Mtm<CR>", {})
 vim.keymap.set("n", "<leader>mmp", "<cmd>MarkdownPreview<CR>", {})
+opts = {
+  -- other stuff
+  background_colour = "#000000"
+}
