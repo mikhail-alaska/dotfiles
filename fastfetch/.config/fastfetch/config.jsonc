@@ -11,9 +11,9 @@
         //    "5": "green"
         //}
         //"source": "~/.config/fastfetch/anime40.jpg",
-        "type": "kitty",
+        //"type": "kitty",
         "height": 14,
-        "width": 10,
+        "width": 20,
         "padding": {
             "top": 1,
            "left": 4
