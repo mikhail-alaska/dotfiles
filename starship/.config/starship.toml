@@ -22,6 +22,9 @@ deleted = '🗑'
 added_style = 'bold blue'
 format = '[+$added]($added_style)/[-$deleted]($deleted_style) '
 
+[golang]
+format = 'via [🏎💨 $version](bold cyan) '
+
 # Disable the package module, hiding it from the prompt completely
 [package]
 disabled = false
