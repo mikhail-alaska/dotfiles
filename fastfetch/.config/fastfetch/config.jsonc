@@ -13,7 +13,7 @@
         "source": "~/.config/fastfetch/anime40.jpg",
         "type": "kitty",
         "height": 14,
-        "width": 28,
+        "width": 26,
         "padding": {
             "top": 1,
            "left": 4
