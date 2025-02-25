@@ -20,10 +20,10 @@ deleted = '🗑'
 
 [git_metrics]
 added_style = 'bold blue'
-format = 'via [🏎💨 $version](bold cyan) '
+format = '[+$added]($added_style)/[-$deleted]($deleted_style) '
 
 [golang]
-format = 'go [$symbol($version )($mod_version )]($style)'
+format = 'via [🏎💨 $version](bold cyan) '
 
 # Disable the package module, hiding it from the prompt completely
 [package]
