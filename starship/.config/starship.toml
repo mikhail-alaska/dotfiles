@@ -9,6 +9,10 @@ error_symbol = '[➜](bold red)' # The 'success_symbol' segment is being set to 
 format = '[\($state( $progress_current of $progress_total)\)]($style) '
 cherry_pick = '[🍒 PICKING](bold red)'
 
+[git_metrics]
+added_style = 'bold blue'
+format = '[+$added]($added_style)/[-$deleted]($deleted_style) '
+
 # Disable the package module, hiding it from the prompt completely
 [package]
 disabled = false
