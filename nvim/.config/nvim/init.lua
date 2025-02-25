@@ -63,7 +63,7 @@ end)
 
 
 
-local current_command = ""
+local current_command = "!!"
 vim.keymap.set("n", "<space>te", function()
   current_command = vim.fn.input("Command: ")
 end)
