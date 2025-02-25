@@ -10,14 +10,6 @@
             "4": "blue",
             "5": "green"
         },
-        "source": "~/.config/fastfetch/anime40.jpg",
-        "type": "kitty",
-        "height": 14,
-        "width": 20,
-        "padding": {
-            "top": 1,
-           "left": 4
-        }
     },
     "modules": [
         "break",
