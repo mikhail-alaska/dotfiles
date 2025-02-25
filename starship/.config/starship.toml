@@ -20,7 +20,7 @@ deleted = '🗑'
 
 [git_metrics]
 added_style = 'bold blue'
-format = '[+$added]($added_style)/[-$deleted]($deleted_style) '
+format = 'via [🏎💨 $version](bold cyan) '
 
 [golang]
 format = 'go [$symbol($version )($mod_version )]($style)'
