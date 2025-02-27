@@ -40,7 +40,7 @@ vim.keymap.set("n", "<leader>sv", "<C-w>v", {})
 vim.keymap.set("n", "<leader>sw", "<C-w>w", {})
 vim.keymap.set("n", "<leader>sx", "<cmd>close<CR>", {})
 
--- vim.keymap.set("n", "<leader>st", ":split| term<CR>", {})
+vim.keymap.set("n", "<leader>st", ":split| term<CR>", {})
 
 vim.keymap.set("n", "<leader>to", "<cmd>tabnew<CR>", {})
 vim.keymap.set("n", "<leader>tx", "<cmd>tabclose<CR>", {})
