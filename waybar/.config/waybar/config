@@ -2,7 +2,7 @@
     "margin-top" : 5,
     "margin-left": 10,
     "margin-right": 10,
-    "height" : 15,
+    "height" : 24,
     "modules-left": [
         "hyprland/window"
     ],
