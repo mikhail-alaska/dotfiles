@@ -93,7 +93,7 @@ button:hover {
 
 .modules-right,.modules-left,.modules-center {
     background-color: @base;
-    border-radius: 10px;
+    border-radius: 15px;
 }
 .modules-right {
     padding: 0 10px;
