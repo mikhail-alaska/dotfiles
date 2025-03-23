@@ -73,7 +73,7 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 
 # Aliases
-alias vpn='nekoray'
+alias vpn='./Downloads/nekoray/nekoray'
 alias ls='ls --color'
 alias ll='ls -latr'
 alias vim='nvim'
