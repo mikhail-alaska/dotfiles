@@ -29,7 +29,7 @@
        }
     },
     "clock": {
-        "format": "{:%Y-%m-%d %H:%M}",
+        "format": "{%H:%M :%Y-%m-%d }",
         "format-alt": "{:%d-%m-%Y}"
     },
     "cpu": {
