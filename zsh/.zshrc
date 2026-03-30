@@ -104,3 +104,4 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 #[[ ! -f ~/dotfiles/p10k/.p10k.zsh ]] || source ~/dotfiles/p10k/.p10k.zsh
 eval "$(starship init zsh)"
 bashhh
+bashhh
