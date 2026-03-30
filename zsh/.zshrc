@@ -106,3 +106,4 @@ eval "$(starship init zsh)"
 bashhh
 bashhh
 bashhh
+bashhh
