@@ -74,6 +74,7 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 # Aliases
 alias vpn='nekoray'
+alias sing='sing-box run -c ~/.config/sing-box/config.json'
 alias ls='ls --color'
 alias ll='ls -lAtr'
 alias vim='nvim'
