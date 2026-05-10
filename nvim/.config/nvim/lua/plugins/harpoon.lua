@@ -4,7 +4,18 @@ return {
     branch = "harpoon2",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      require("harpoon"):setup()
+      local harpoon = require("harpoon")
+
+      harpoon:setup()
+      harpoon:extend({
+        UI_CREATE = function(cx)
+          vim.api.nvim_set_option_value(
+            "winhl",
+            "Normal:NormalFloat,FloatBorder:FloatBorder,FloatTitle:FloatTitle",
+            { win = cx.win_id }
+          )
+        end,
+      })
     end,
     keys = {
       { "<leader>a", function() require("harpoon"):list():add() end, desc = "harpoon file", },
