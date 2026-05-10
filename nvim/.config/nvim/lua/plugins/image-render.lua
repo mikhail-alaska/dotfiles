@@ -18,7 +18,7 @@ return {
         integrations = {
           -- Notice these are the settings for markdown files
           markdown = {
-            enabled = true,
+            enabled = false,
             clear_in_insert_mode = false,
             -- Set this to false if you don't want to render images coming from
             -- a URL
