@@ -23,21 +23,29 @@ return {
         "neovim/nvim-lspconfig",
         lazy = false,
         config = function()
-            local lspconfig = require("lspconfig")
-            local capabilities = require('blink.cmp').get_lsp_capabilities()
-            lspconfig.lua_ls.setup({
-                capabilities = capabilities
+            local capabilities = require("blink.cmp").get_lsp_capabilities()
+
+            vim.lsp.config("lua_ls", {
+                capabilities = capabilities,
             })
 
-            lspconfig.gopls.setup({
-                capabilities = capabilities
+            vim.lsp.config("gopls", {
+                capabilities = capabilities,
             })
-            lspconfig.pylsp.setup({
-                capabilities = capabilities
+
+            vim.lsp.config("pylsp", {
+                capabilities = capabilities,
             })
-            lspconfig.clangd.setup({
-                capabilities = capabilities
+
+            vim.lsp.config("clangd", {
+                capabilities = capabilities,
             })
+
+            vim.lsp.enable("lua_ls")
+            vim.lsp.enable("gopls")
+            vim.lsp.enable("pylsp")
+            vim.lsp.enable("clangd")
+
             vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
             vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {})
             vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, {})
