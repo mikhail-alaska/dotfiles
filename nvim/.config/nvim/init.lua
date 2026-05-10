@@ -27,6 +27,20 @@ vim.opt.termguicolors = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
+local function set_transparent_float_highlights()
+  vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+  vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
+  vim.api.nvim_set_hl(0, "FloatTitle", { bg = "none" })
+  vim.api.nvim_set_hl(0, "Pmenu", { bg = "none" })
+end
+
+set_transparent_float_highlights()
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("transparent-floats", { clear = true }),
+  callback = set_transparent_float_highlights,
+})
+
 vim.api.nvim_create_autocmd("TermOpen", {
   group = vim.api.nvim_create_augroup("custom-term-open", { clear = true }),
   callback = function()
@@ -115,9 +129,7 @@ local function create_floating_window(opts)
 
   -- Create the floating window
   local win = vim.api.nvim_open_win(buf, true, win_config)
-  vim.api.nvim_win_set_option(win, "winhl", "Normal:NormalFloat")
-  vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-  vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
+  vim.api.nvim_win_set_option(win, "winhl", "Normal:NormalFloat,FloatBorder:FloatBorder,FloatTitle:FloatTitle")
   return { buf = buf, win = win }
 end
 
