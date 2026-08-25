@@ -172,7 +172,7 @@ hl.bind(main_mod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(main_mod .. " + X", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(main_mod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(main_mod .. " + P", hl.dsp.window.pseudo())
-hl.bind(main_mod .. " + M", hl.dsp.exit())
+-- SUPER+M is intentionally left unbound: session exit must not be accidental.
 
 hl.bind(main_mod .. " + Print", hl.dsp.exec_cmd("hyprshot -m window"))
 hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m output"))
