@@ -36,11 +36,13 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE")
     hl.exec_cmd(session_terminal, { workspace = "1 silent" })
-    hl.exec_cmd("firefox", { workspace = "2 silent" })
-    hl.exec_cmd("Telegram", { workspace = "3 silent" })
-    hl.exec_cmd("happ", { workspace = "10 silent" })
-    hl.exec_cmd("gitwatch -r https://github.com/mikhail-alaska/dotfiles/ /home/alaska/dotfiles/")
-    hl.exec_cmd("gitwatch -r https://github.com/mikhail-alaska/hse/ -R /home/alaska/Documents/hse")
+    -- Stagger disk- and network-heavy applications after a cold boot. Class
+    -- rules below keep their workspace assignment even when an app forks.
+    hl.exec_cmd("sh -lc 'sleep 0.5; exec happ'", { workspace = "10 silent" })
+    hl.exec_cmd("sh -lc 'sleep 2; exec firefox'", { workspace = "2 silent" })
+    hl.exec_cmd("sh -lc 'sleep 6; exec Telegram'", { workspace = "3 silent" })
+    hl.exec_cmd("sh -lc 'sleep 10; exec gitwatch -r https://github.com/mikhail-alaska/dotfiles/ /home/alaska/dotfiles/'")
+    hl.exec_cmd("sh -lc 'sleep 12; exec gitwatch -r https://github.com/mikhail-alaska/hse/ -R /home/alaska/Documents/hse'")
 end)
 
 -- Class rules are a fallback for single-instance/Electron applications whose
