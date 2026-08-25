@@ -225,11 +225,21 @@ if hyprexpo_loaded then
         },
     })
 
-    -- Swipe from the bottom toward the top with three fingers.
-    hl.plugin.hyprexpo.gesture({
+    -- Deterministic Mission Control-style gestures: up opens, down closes.
+    hl.gesture({
         fingers = 3,
         direction = "up",
-        action = "expo",
+        action = function()
+            hl.plugin.hyprexpo.expo("open")
+        end,
+    })
+
+    hl.gesture({
+        fingers = 3,
+        direction = "down",
+        action = function()
+            hl.plugin.hyprexpo.expo("close")
+        end,
     })
 
     hl.bind(main_mod .. " + G", function()
