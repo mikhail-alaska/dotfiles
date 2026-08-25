@@ -130,7 +130,9 @@ hl.config({
             tap_and_drag = false,
             drag_lock = 0,
             clickfinger_behavior = true,
-            disable_while_typing = true,
+            -- Keep taps responsive immediately after leaving the keyboard.
+            -- Libinput's normal palm detection remains active.
+            disable_while_typing = false,
         },
     },
 
