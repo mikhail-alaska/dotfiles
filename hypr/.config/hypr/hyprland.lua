@@ -149,7 +149,7 @@ hl.animation({ leaf = "windowsMove", enabled = true, speed = 4, spring = "macSpr
 hl.animation({ leaf = "border", enabled = true, speed = 5, bezier = "macEaseInOut" })
 hl.animation({ leaf = "borderangle", enabled = true, speed = 6, bezier = "macEaseInOut" })
 hl.animation({ leaf = "fade", enabled = true, speed = 3, bezier = "macEaseOut" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 4, spring = "macSpring", style = "slide" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 5, spring = "macSpring", style = "slide" })
 
 -- Native, 1:1 three-finger horizontal workspace switching.
 hl.gesture({
