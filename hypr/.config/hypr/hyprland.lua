@@ -110,17 +110,30 @@ hl.config({
     },
 })
 
-hl.curve("myBezier", {
+hl.curve("macEaseOut", {
     type = "bezier",
-    points = { { 0.05, 0.9 }, { 0.1, 1.05 } },
+    points = { { 0.22, 1 }, { 0.36, 1 } },
 })
 
-hl.animation({ leaf = "windows", enabled = true, speed = 7, bezier = "myBezier" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 7, bezier = "default", style = "popin 80%" })
-hl.animation({ leaf = "border", enabled = true, speed = 10, bezier = "default" })
-hl.animation({ leaf = "borderangle", enabled = true, speed = 8, bezier = "default" })
-hl.animation({ leaf = "fade", enabled = true, speed = 7, bezier = "default" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default" })
+hl.curve("macEaseInOut", {
+    type = "bezier",
+    points = { { 0.65, 0 }, { 0.35, 1 } },
+})
+
+hl.curve("macSpring", {
+    type = "spring",
+    mass = 1,
+    stiffness = 170,
+    dampening = 26,
+})
+
+hl.animation({ leaf = "windows", enabled = true, speed = 4, spring = "macSpring", style = "popin 94%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "macEaseInOut", style = "popin 94%" })
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 4, spring = "macSpring" })
+hl.animation({ leaf = "border", enabled = true, speed = 5, bezier = "macEaseInOut" })
+hl.animation({ leaf = "borderangle", enabled = true, speed = 6, bezier = "macEaseInOut" })
+hl.animation({ leaf = "fade", enabled = true, speed = 3, bezier = "macEaseOut" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 4, spring = "macSpring", style = "slide" })
 
 -- Native, 1:1 three-finger horizontal workspace switching.
 hl.gesture({
@@ -205,7 +218,7 @@ if hyprexpo_loaded then
                 gaps_out = 24,
                 bg_col = "rgb(1e1e2e)",
                 workspace_method = "center current",
-                gesture_distance = 220,
+                gesture_distance = 280,
                 cancel_key = "escape",
                 show_cursor = 1,
                 show_pinned_windows = 0,
@@ -254,21 +267,17 @@ if hyprexpo_loaded then
         },
     })
 
-    -- Deterministic Mission Control-style gestures: up opens, down closes.
-    hl.gesture({
+    -- Interactive Mission Control gestures: both directions follow the fingers.
+    hl.plugin.hyprexpo.gesture({
         fingers = 3,
         direction = "up",
-        action = function()
-            hl.plugin.hyprexpo.expo("open")
-        end,
+        action = "open",
     })
 
-    hl.gesture({
+    hl.plugin.hyprexpo.gesture({
         fingers = 3,
         direction = "down",
-        action = function()
-            hl.plugin.hyprexpo.expo("close")
-        end,
+        action = "close",
     })
 
     hl.bind(main_mod .. " + G", function()
