@@ -2,6 +2,7 @@
 -- The previous hyprland.conf is intentionally kept as a rollback copy.
 
 local terminal = "kitty"
+local session_terminal = "/home/alaska/.local/bin/workspace-terminal"
 local file_manager = "thunar"
 local menu = "wofi --show drun"
 local main_mod = "SUPER"
@@ -33,12 +34,34 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprlock")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("waybar")
-    hl.exec_cmd(terminal)
-    hl.exec_cmd("firefox")
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE")
+    hl.exec_cmd(session_terminal, { workspace = "1 silent" })
+    hl.exec_cmd("firefox", { workspace = "2 silent" })
+    hl.exec_cmd("Telegram", { workspace = "3 silent" })
+    hl.exec_cmd("happ", { workspace = "10 silent" })
     hl.exec_cmd("gitwatch -r https://github.com/mikhail-alaska/dotfiles/ /home/alaska/dotfiles/")
     hl.exec_cmd("gitwatch -r https://github.com/mikhail-alaska/hse/ -R /home/alaska/Documents/hse")
 end)
+
+-- Class rules are a fallback for single-instance/Electron applications whose
+-- visible process can fork away from the PID launched by exec_cmd.
+hl.window_rule({
+    name = "session-firefox-workspace",
+    match = { class = "^firefox$" },
+    workspace = "2",
+})
+
+hl.window_rule({
+    name = "session-telegram-workspace",
+    match = { class = "^org\\.telegram\\.desktop$" },
+    workspace = "3",
+})
+
+hl.window_rule({
+    name = "session-happ-workspace",
+    match = { class = "^Happ$" },
+    workspace = "10",
+})
 
 hl.config({
     general = {
