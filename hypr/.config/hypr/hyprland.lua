@@ -235,6 +235,7 @@ if hyprexpo_loaded then
                 bg_col = "rgb(1e1e2e)",
                 workspace_method = "center current",
                 gesture_distance = 280,
+                gesture_close_distance = 200,
                 cancel_key = "escape",
                 show_cursor = 1,
                 show_pinned_windows = 0,
