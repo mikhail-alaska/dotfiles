@@ -108,6 +108,22 @@ hl.config({
             disable_while_typing = true,
         },
     },
+
+    gestures = {
+        -- Deliberate travel with an easy commit and reliable quick flicks.
+        workspace_swipe_distance = 360,
+        workspace_swipe_cancel_ratio = 0.32,
+        workspace_swipe_min_speed_to_force = 20,
+
+        -- Let Hyprland distinguish horizontal motion from up/down first.
+        workspace_swipe_direction_lock = true,
+        workspace_swipe_direction_lock_threshold = 24,
+
+        -- One existing workspace per gesture, without accidental creation at an edge.
+        workspace_swipe_create_new = false,
+        workspace_swipe_forever = false,
+        workspace_swipe_use_r = false,
+    },
 })
 
 hl.curve("macEaseOut", {
