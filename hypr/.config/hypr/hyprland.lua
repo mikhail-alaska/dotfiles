@@ -225,10 +225,10 @@ if hyprexpo_loaded then
         },
     })
 
-    -- Swipe from the top toward the bottom with three fingers.
+    -- Swipe from the bottom toward the top with three fingers.
     hl.plugin.hyprexpo.gesture({
         fingers = 3,
-        direction = "down",
+        direction = "up",
         action = "expo",
     })
 
