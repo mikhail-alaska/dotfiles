@@ -234,7 +234,7 @@ if hyprexpo_loaded then
                 gaps_out = 24,
                 bg_col = "rgb(1e1e2e)",
                 workspace_method = "center current",
-                gesture_distance = 280,
+                gesture_distance = 200,
                 gesture_close_distance = 200,
                 cancel_key = "escape",
                 show_cursor = 1,
