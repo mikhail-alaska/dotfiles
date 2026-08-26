@@ -86,7 +86,7 @@ alias lock='hyprlock'
 eval "$(fzf --zsh)"
 eval "$(zoxide init --cmd cd zsh)"
 
-export PATH=$PATH:$HOME/.local/bin
+export PATH="$HOME/.local/bin:$PATH"
 
 ## [Completion]
 ## Completion scripts setup. Remove the following line to uninstall
