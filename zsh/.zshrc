@@ -104,3 +104,30 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # To customize prompt, run `p10k configure` or edit ~/dotfiles/p10k/.p10k.zsh.
 #[[ ! -f ~/dotfiles/p10k/.p10k.zsh ]] || source ~/dotfiles/p10k/.p10k.zsh
 eval "$(starship init zsh)"
+
+# Catppuccin Mocha palette for libnewt applications (nmtui, whiptail).
+export NEWT_COLORS='
+root=#cdd6f4,#1e1e2e
+border=#cba6f7,#1e1e2e
+window=#cdd6f4,#1e1e2e
+shadow=#11111b,#11111b
+title=#cba6f7,#1e1e2e
+button=#1e1e2e,#b4befe
+actbutton=#1e1e2e,#cba6f7
+checkbox=#cdd6f4,#1e1e2e
+actcheckbox=#cba6f7,#1e1e2e
+entry=#cdd6f4,#313244
+label=#cdd6f4,#1e1e2e
+listbox=#cdd6f4,#313244
+actlistbox=#1e1e2e,#cba6f7
+textbox=#cdd6f4,#313244
+acttextbox=#1e1e2e,#89b4fa
+helpline=#1e1e2e,#89b4fa
+roottext=#cdd6f4,#1e1e2e
+emptyscale=#45475a,#1e1e2e
+fullscale=#cba6f7,#1e1e2e
+disentry=#6c7086,#313244
+compactbutton=#cba6f7,#1e1e2e
+actsellistbox=#1e1e2e,#cba6f7
+sellistbox=#cba6f7,#313244
+'
