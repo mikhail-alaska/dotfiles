@@ -5,6 +5,9 @@ from __future__ import annotations
 
 import argparse
 import socket
+import struct
+import sys
+import time
 
 
 DEFAULT_MAC = "50:EB:F6:9E:F0:81"
@@ -19,20 +22,69 @@ def magic_packet(mac: str) -> bytes:
     return b"\xff" * 6 + hardware_address * 16
 
 
+def raw_ethernet_frame(packet: bytes, interface: str) -> bytes:
+    with open(f"/sys/class/net/{interface}/address", encoding="ascii") as source:
+        source_mac = bytes.fromhex(source.read().strip().replace(":", ""))
+    return b"\xff" * 6 + source_mac + struct.pack("!H", 0x0842) + packet
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Wake ArchPC over the local LAN")
     parser.add_argument("--mac", default=DEFAULT_MAC)
     parser.add_argument("--broadcast", default=DEFAULT_BROADCAST)
+    parser.add_argument(
+        "--bursts",
+        type=int,
+        default=6,
+        help="number of UDP packet bursts to send (default: 6)",
+    )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=2.0,
+        help="seconds between bursts (default: 2)",
+    )
+    parser.add_argument(
+        "--raw-interface",
+        metavar="IFACE",
+        help="also send a Linux layer-2 EtherType 0x0842 frame (requires root)",
+    )
     args = parser.parse_args()
+
+    if args.bursts < 1:
+        parser.error("--bursts must be at least 1")
+    if args.interval < 0:
+        parser.error("--interval cannot be negative")
+    if args.raw_interface and sys.platform != "linux":
+        parser.error("--raw-interface is Linux-only; macOS uses UDP broadcast")
 
     packet = magic_packet(args.mac)
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        for port in (9, 7):
-            for _ in range(3):
-                sock.sendto(packet, (args.broadcast, port))
+        for burst in range(args.bursts):
+            for port in (9, 7):
+                for _ in range(3):
+                    sock.sendto(packet, (args.broadcast, port))
+            if burst + 1 < args.bursts:
+                time.sleep(args.interval)
 
-    print(f"Wake packet sent to {args.mac} via {args.broadcast}")
+    print(
+        f"Sent {args.bursts} Wake-on-LAN bursts to {args.mac} "
+        f"via {args.broadcast}"
+    )
+
+    if args.raw_interface:
+        frame = raw_ethernet_frame(packet, args.raw_interface)
+        try:
+            with socket.socket(socket.AF_PACKET, socket.SOCK_RAW) as sock:
+                sock.bind((args.raw_interface, 0))
+                for _ in range(6):
+                    sock.send(frame)
+        except PermissionError as error:
+            raise SystemExit(
+                "Raw WoL requires root; rerun this command through sudo"
+            ) from error
+        print(f"Raw EtherType 0x0842 packets sent via {args.raw_interface}")
 
 
 if __name__ == "__main__":

@@ -130,10 +130,13 @@ To wake ArchPC while the Mac is connected to the home LAN:
 wake-archpc
 ```
 
-The command sends the existing ArchPC magic packet to the local broadcast on
-UDP ports 9 and 7. Direct Wake-on-LAN broadcast forwarding through the router's
-OpenVPN connection is not assumed; use a permanently online LAN host as a relay
-for reliable wake-up from outside the home network.
+By default the command sends six Wake-on-LAN bursts to the local broadcast on
+UDP ports 9 and 7, two seconds apart. Tune this with `--bursts` and `--interval`.
+The source command's `--raw-interface` fallback relies on Linux `AF_PACKET` and
+is intentionally rejected on macOS, where the command uses UDP broadcast.
+Direct Wake-on-LAN broadcast forwarding through the router's OpenVPN connection
+is not assumed; use a permanently online LAN host as a relay for reliable
+wake-up from outside the home network.
 
 ## Post-install checks
 
