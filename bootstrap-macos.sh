@@ -6,6 +6,9 @@ readonly BREW_PREFIX="/opt/homebrew"
 readonly HOMEBREW_INSTALL_COMMIT="26f8b07461e85fad16afd83797ad5846fae7a471"
 readonly HOMEBREW_INSTALL_SHA256="12479a24be3f5307eecac7cde670fad7118640f031229e964f544b1367b52a41"
 readonly HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/${HOMEBREW_INSTALL_COMMIT}/install.sh"
+readonly PRIVATE_ROOT="${HOME}/.local/share/dotfiles-private"
+readonly BACKUP_DIR="${PRIVATE_ROOT}/backups"
+readonly -a STOW_PACKAGES=(zsh starship kitty nvim tmux git ssh scripts openvpn yabai skhd sketchybar borders launchd)
 
 info() { printf '\n==> %s\n' "$*"; }
 warn() { printf 'WARNING: %s\n' "$*" >&2; }
@@ -33,7 +36,7 @@ install_homebrew() {
 
     temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/homebrew-installer.XXXXXX")"
     installer="${temporary_dir}/install.sh"
-    trap 'rm -rf "$temporary_dir"' RETURN
+    trap 'rm -rf "$temporary_dir"' EXIT
 
     # Check 1: only the reviewed, commit-pinned HTTPS URL is accepted.
     [[ "$HOMEBREW_INSTALL_URL" == \
@@ -64,13 +67,18 @@ install_homebrew() {
     [[ -x "${BREW_PREFIX}/bin/brew" ]] || die "Homebrew installation did not create ${BREW_PREFIX}/bin/brew"
     eval "$("${BREW_PREFIX}/bin/brew" shellenv)"
 
-    trap - RETURN
     rm -rf "$temporary_dir"
+    trap - EXIT
+}
+
+prepare_stow() {
+    info "Updating Homebrew and installing GNU Stow for the preflight"
+    brew update
+    brew install stow
 }
 
 install_packages() {
     info "Installing packages and applications from Brewfile"
-    brew update
     brew bundle install --file="${DOTFILES_DIR}/Brewfile"
 }
 
@@ -82,16 +90,26 @@ prepare_private_directories() {
         "${HOME}/.local" \
         "${HOME}/.local/bin" \
         "${HOME}/.local/share" \
-        "${HOME}/.local/share/dotfiles-private" \
+        "$PRIVATE_ROOT" \
+        "$BACKUP_DIR" \
         "${HOME}/Library" \
-        "${HOME}/Library/LaunchAgents"
+        "${HOME}/Library/LaunchAgents" \
+        "${HOME}/Library/Logs"
+}
+
+preflight_stow() {
+    local output
+    info "Checking for Stow conflicts before installing the full Brewfile"
+    if ! output="$(stow --simulate --restow --verbose \
+        --dir="$DOTFILES_DIR" --target="$HOME" "${STOW_PACKAGES[@]}" 2>&1)"; then
+        printf '%s\n' "$output" >&2
+        die "Stow conflicts detected. Back up or move the listed files, then rerun bootstrap. --adopt is intentionally not used."
+    fi
 }
 
 stow_dotfiles() {
-    local packages
-    packages=(zsh starship kitty nvim tmux git ssh scripts openvpn yabai skhd sketchybar borders launchd)
     info "Stowing macOS and shared packages"
-    stow --restow --dir="$DOTFILES_DIR" --target="$HOME" "${packages[@]}"
+    stow --restow --dir="$DOTFILES_DIR" --target="$HOME" "${STOW_PACKAGES[@]}"
 }
 
 install_tpm() {
@@ -115,7 +133,8 @@ enable_touch_id_sudo() {
         return
     }
 
-    if sudo grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' "$target" 2>/dev/null; then
+    if [[ -r "$target" ]] && \
+        grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' "$target"; then
         info "Touch ID for sudo is already enabled"
         return
     fi
@@ -125,12 +144,20 @@ enable_touch_id_sudo() {
         return
     }
 
+    info "Requesting sudo authentication before updating Apple's PAM override"
     sudo -v
+    if sudo grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' \
+        "$target" 2>/dev/null; then
+        info "Touch ID for sudo is already enabled"
+        return
+    fi
+
     temporary_file="$(mktemp "${TMPDIR:-/tmp}/sudo_local.XXXXXX")"
+    trap 'rm -f "$temporary_file" "${temporary_file}.new"' EXIT
     if sudo test -r "$target"; then
         sudo cat "$target" >"$temporary_file"
-        backup="${target}.dotfiles-backup.$(date +%Y%m%d%H%M%S)"
-        sudo cp "$target" "$backup"
+        backup="${BACKUP_DIR}/sudo_local.$(date +%Y%m%d%H%M%S)"
+        install -m 600 "$temporary_file" "$backup"
     else
         cp "$template" "$temporary_file"
         backup="not-needed"
@@ -146,6 +173,7 @@ enable_touch_id_sudo() {
 
     sudo install -o root -g wheel -m 0444 "$temporary_file" "$target"
     rm -f "$temporary_file"
+    trap - EXIT
     sudo grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' "$target" || \
         die "Touch ID PAM rule failed post-install verification"
     info "Touch ID for sudo enabled; password fallback remains active (backup: ${backup})"
@@ -169,8 +197,8 @@ start_services() {
     info "Starting window-management services"
     yabai --start-service || warn "yabai service needs Accessibility approval"
     skhd --start-service || warn "skhd service needs Accessibility approval"
-    brew services restart sketchybar
-    brew services restart borders
+    brew services restart sketchybar || warn "SketchyBar service could not be started"
+    brew services restart borders || warn "JankyBorders service could not be started"
 
     launchctl bootout "gui/${UID}/com.alaska.macos-session" >/dev/null 2>&1 || true
     launchctl bootstrap "gui/${UID}" "${HOME}/Library/LaunchAgents/com.alaska.macos-session.plist" || \
@@ -194,8 +222,10 @@ EOF
 
 verify_platform
 install_homebrew
-install_packages
 prepare_private_directories
+prepare_stow
+preflight_stow
+install_packages
 stow_dotfiles
 install_tpm
 

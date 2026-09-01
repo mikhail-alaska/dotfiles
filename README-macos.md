@@ -36,7 +36,8 @@ checks all three of the following before execution:
 2. TLS, HTTP status, and the pinned SHA-256 digest all pass.
 3. Bash syntax and Homebrew identity/prefix markers match the reviewed script.
 
-It then installs `Brewfile`, stows only the packages listed above, installs TPM,
+It first installs GNU Stow and performs a non-mutating conflict check, then
+installs `Brewfile`, stows only the packages listed above, installs TPM,
 optionally imports private material from Archpad, optionally enables Touch ID
 for `sudo`, applies small macOS defaults, and starts the window-management
 services. The two external Homebrew taps are trusted only for the named Yabai,
@@ -44,7 +45,9 @@ skhd, SketchyBar, and JankyBorders formulae, not as whole repositories.
 
 Touch ID is installed through Apple's `/etc/pam.d/sudo_local` mechanism. The
 script checks Apple's template and PAM module first, backs up an existing file,
-and retains the normal password rule as a fallback.
+and retains the normal password rule as a fallback. PAM and `/etc/hosts`
+backups are stored with mode 0600 under
+`~/.local/share/dotfiles-private/backups`, not in system configuration folders.
 
 ## Keyboard workflow
 
@@ -93,6 +96,8 @@ Host archpad
 3. Installs only the Mac's `archpad_ed25519.pub` on Archpad and verifies key login.
 4. Uses SCP over that verified connection to copy the embedded-key OpenVPN
    profile, host-specific SSH config, and selected custom `/etc/hosts` entries.
+   The SSH config is accepted only when every directive is on a narrow,
+   non-executable allowlist.
 5. Stores them outside Git under `~/.local/share/dotfiles-private` and
    `~/.ssh/private.d`, with restrictive modes.
 6. Offers to authorize the newly generated public keys on `vpn-spb`, `vpn-ger`,
@@ -100,8 +105,12 @@ Host archpad
 
 The imported `/etc/hosts` entries are placed in a marked block, and the previous
 file is backed up before replacement. The copied OpenVPN profile is consumed by
-`run-openvpn-split`, which requires `route-nopull`, checks local LAN reachability,
-and leaves Linux policy-routing logic on the Linux machine.
+`run-openvpn-split`, which requires `route-nopull`, rejects command hooks,
+plugins, and indirect config loading, and leaves Linux policy-routing logic on
+the Linux machine. It skips VPN startup only when both the pinned-key SSH check
+to Archpad and the ArchPC health check succeed; an unauthenticated HTTP response
+alone is not treated as proof of the home network. No NOPASSWD rule is created
+for this user-writable launcher.
 
 To re-run only the private migration later:
 

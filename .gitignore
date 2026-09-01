@@ -10,4 +10,7 @@ private.d/
 auth.json
 .env
 id_*
+*_ed25519*
+3xui
+3xui.pub
 known_hosts*

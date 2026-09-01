@@ -2,10 +2,9 @@
 set -Eeuo pipefail
 
 readonly DEFAULT_CONFIG="${HOME}/.local/share/dotfiles-private/openvpn/OpenVPN-Config.ovpn"
+readonly OPENVPN_BIN="/opt/homebrew/opt/openvpn/sbin/openvpn"
 ovpn_config="${DOTFILES_OPENVPN_CONFIG:-${DEFAULT_CONFIG}}"
-openvpn_bin="${OPENVPN_BIN:-}"
 force_local=0
-openvpn_args=()
 
 while (($#)); do
     case "$1" in
@@ -18,19 +17,9 @@ while (($#)); do
             ovpn_config="$2"
             shift 2
             ;;
-        --openvpn-bin)
-            [[ $# -ge 2 ]] || { printf '%s\n' '--openvpn-bin needs a path' >&2; exit 64; }
-            openvpn_bin="$2"
-            shift 2
-            ;;
-        --)
-            shift
-            openvpn_args+=("$@")
-            break
-            ;;
         *)
-            openvpn_args+=("$1")
-            shift
+            printf 'Unknown argument: %s\nusage: %s [--force-local] [--config PATH]\n' "$1" "$0" >&2
+            exit 64
             ;;
     esac
 done
@@ -44,17 +33,87 @@ done
     exit 66
 }
 
-if [[ -z "$openvpn_bin" ]]; then
-    openvpn_bin="$(command -v openvpn || true)"
-fi
-[[ -x "$openvpn_bin" ]] || { printf '%s\n' 'openvpn is not installed or not executable' >&2; exit 69; }
-
 grep -Eq '^[[:space:]]*route-nopull([[:space:]]|$)' "$ovpn_config" || {
     printf '%s\n' 'Refusing to run a profile without route-nopull.' >&2
     exit 65
 }
 
-if ((force_local == 0)) && curl --noproxy '*' --silent --fail \
+# The profile is writable by the user but is later consumed by a root process.
+# Treat it as data: accept only the directives used by the audited router
+# profile and known inline certificate/key blocks. This excludes command hooks,
+# plugins, indirect configs, arbitrary file-writing directives, and loaders.
+invalid_directives="$(LC_ALL=C awk '
+    BEGIN {
+        allowed["allow-compression"] = 1
+        allowed["cipher"] = 1
+        allowed["client"] = 1
+        allowed["comp-lzo"] = 1
+        allowed["data-ciphers"] = 1
+        allowed["data-ciphers-fallback"] = 1
+        allowed["dev"] = 1
+        allowed["float"] = 1
+        allowed["nobind"] = 1
+        allowed["persist-key"] = 1
+        allowed["persist-tun"] = 1
+        allowed["proto"] = 1
+        allowed["pull-filter"] = 1
+        allowed["remote"] = 1
+        allowed["remote-cert-tls"] = 1
+        allowed["resolv-retry"] = 1
+        allowed["route"] = 1
+        allowed["route-nopull"] = 1
+        allowed["tls-version-min"] = 1
+        inline_allowed["ca"] = 1
+        inline_allowed["cert"] = 1
+        inline_allowed["key"] = 1
+        inline_allowed["tls-auth"] = 1
+        inline_allowed["tls-crypt"] = 1
+    }
+    /^[[:space:]]*($|#|;)/ {next}
+    /^[[:space:]]*<\// {
+        tag = $0
+        sub(/^[[:space:]]*<\//, "", tag)
+        sub(/>.*/, "", tag)
+        tag = tolower(tag)
+        if (inline_tag == "" || tag != inline_tag) print FNR ":</" tag ">"
+        inline_tag = ""
+        next
+    }
+    /^[[:space:]]*</ {
+        tag = $0
+        sub(/^[[:space:]]*</, "", tag)
+        sub(/[[:space:]>].*/, "", tag)
+        tag = tolower(tag)
+        if (!inline_allowed[tag]) print FNR ":<" tag ">"
+        inline_tag = tag
+        next
+    }
+    inline_tag != "" {next}
+    {
+        directive = tolower($1)
+        if (!allowed[directive]) print FNR ":" $1
+    }
+    END {
+        if (inline_tag != "") print "EOF:unclosed-<" inline_tag ">"
+    }
+' "$ovpn_config")"
+if [[ -n "$invalid_directives" ]]; then
+    printf 'Refusing OpenVPN profile; unexpected directives or inline blocks:\n%s\n' \
+        "$invalid_directives" >&2
+    exit 65
+fi
+
+[[ -x "$OPENVPN_BIN" ]] || {
+    printf 'OpenVPN is not installed at the expected Homebrew path: %s\n' "$OPENVPN_BIN" >&2
+    exit 69
+}
+
+# An HTTP response alone does not prove that this is the home LAN. A successful
+# pinned-key, non-interactive connection to Archpad supplies that proof first.
+if ((force_local == 0)) && ssh \
+    -o BatchMode=yes -o ConnectTimeout=2 -o ConnectionAttempts=1 \
+    archpad true >/dev/null 2>&1 && \
+    curl --noproxy '*' --silent --fail \
     --connect-timeout 1 --max-time 2 \
     http://192.168.0.222:18080/health >/dev/null 2>&1; then
     printf '%s\n' \
@@ -65,9 +124,12 @@ if ((force_local == 0)) && curl --noproxy '*' --silent --fail \
 fi
 
 if ((EUID != 0)); then
-    exec sudo -- "$0" --config "$ovpn_config" --openvpn-bin "$openvpn_bin" -- "${openvpn_args[@]}"
+    # The local-network check has already run as the desktop user. Propagating
+    # --force-local prevents the root re-exec from repeating it with root's SSH
+    # configuration and also preserves an explicit user request.
+    exec sudo -- "$0" --force-local --config "$ovpn_config"
 fi
 
 # OpenVPN owns the utun routes and removes them when it exits. The profile has
 # route-nopull plus explicit /32 routes, replacing Linux-only `ip rule` logic.
-exec "$openvpn_bin" --config "$ovpn_config" "${openvpn_args[@]}"
+exec "$OPENVPN_BIN" --config "$ovpn_config"

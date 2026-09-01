@@ -8,15 +8,11 @@
     <array>
         <string>/bin/zsh</string>
         <string>-lc</string>
-        <string>exec "$HOME/.local/bin/macos-session"</string>
+        <string>mkdir -p "$HOME/Library/Logs"; exec "$HOME/.local/bin/macos-session" &gt;&gt;"$HOME/Library/Logs/com.alaska.macos-session.out.log" 2&gt;&gt;"$HOME/Library/Logs/com.alaska.macos-session.err.log"</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>ProcessType</key>
     <string>Interactive</string>
-    <key>StandardOutPath</key>
-    <string>/tmp/com.alaska.macos-session.out.log</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/com.alaska.macos-session.err.log</string>
 </dict>
 </plist>

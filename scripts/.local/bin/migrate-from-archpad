@@ -5,6 +5,7 @@ readonly ARCHPAD_ALIAS="archpad"
 readonly ARCHPAD_ADDRESS="192.168.0.22"
 readonly ARCHPAD_FINGERPRINT="SHA256:hKLaz9Hr0zTPLlQvI99OcrTJGcj1w7WrHk7mR7+Jwq0"
 readonly PRIVATE_ROOT="${HOME}/.local/share/dotfiles-private"
+readonly BACKUP_DIR="${PRIVATE_ROOT}/backups"
 readonly PRIVATE_SSH_DIR="${HOME}/.ssh/private.d"
 readonly ARCHPAD_KNOWN_HOSTS="${HOME}/.ssh/known_hosts.archpad"
 
@@ -45,7 +46,7 @@ pin_archpad_host_key() {
     local temporary_dir scan_file observed
     temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/archpad-hostkey.XXXXXX")"
     scan_file="${temporary_dir}/known_hosts"
-    trap 'rm -rf "$temporary_dir"' RETURN
+    trap 'rm -rf "$temporary_dir"' EXIT
 
     info "Reading Archpad ED25519 host key from ${ARCHPAD_ADDRESS}"
     ssh-keyscan -T 5 -t ed25519 "$ARCHPAD_ADDRESS" >"$scan_file" 2>/dev/null || \
@@ -58,8 +59,8 @@ pin_archpad_host_key() {
 
     install -m 600 "$scan_file" "$ARCHPAD_KNOWN_HOSTS"
     info "Pinned verified Archpad fingerprint ${observed}"
-    trap - RETURN
     rm -rf "$temporary_dir"
+    trap - EXIT
 }
 
 authorize_archpad_key() {
@@ -84,7 +85,7 @@ authorize_archpad_key() {
 copy_private_material() {
     local temporary_dir remote_hosts remote_system_hosts fragment
     temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/archpad-import.XXXXXX")"
-    trap 'rm -rf "$temporary_dir"' RETURN
+    trap 'rm -rf "$temporary_dir"' EXIT
     remote_hosts="${temporary_dir}/ssh-hosts.conf"
     remote_system_hosts="${temporary_dir}/hosts"
     fragment="${PRIVATE_ROOT}/hosts.fragment"
@@ -92,12 +93,13 @@ copy_private_material() {
     install -d -m 700 "$PRIVATE_ROOT" "${PRIVATE_ROOT}/openvpn" "$PRIVATE_SSH_DIR"
 
     info "Copying the embedded-key OpenVPN profile outside Git"
-    scp -p "${ARCHPAD_ALIAS}:/home/alaska/projects/rpi/OpenVPN-Config.ovpn" \
+    scp -p "${ARCHPAD_ALIAS}:projects/rpi/OpenVPN-Config.ovpn" \
         "${PRIVATE_ROOT}/openvpn/OpenVPN-Config.ovpn"
     chmod 600 "${PRIVATE_ROOT}/openvpn/OpenVPN-Config.ovpn"
 
     info "Copying host-specific SSH configuration outside Git"
-    scp -p "${ARCHPAD_ALIAS}:/home/alaska/.ssh/config" "$remote_hosts"
+    scp -p "${ARCHPAD_ALIAS}:.ssh/config" "$remote_hosts"
+    validate_imported_ssh_config "$remote_hosts"
     install -m 600 "$remote_hosts" "${PRIVATE_SSH_DIR}/hosts.conf"
 
     info "Importing only custom Archpad /etc/hosts entries"
@@ -107,8 +109,45 @@ copy_private_material() {
     chmod 600 "$fragment"
     [[ -s "$fragment" ]] || warn "No expected custom hosts entries were found"
 
-    trap - RETURN
     rm -rf "$temporary_dir"
+    trap - EXIT
+}
+
+validate_imported_ssh_config() {
+    local config="$1"
+    local invalid
+
+    # Imported host entries are data, not an execution mechanism. Keep a
+    # deliberately narrow allowlist and require an explicit review when a new
+    # SSH directive is added on Archpad.
+    invalid="$(awk '
+        BEGIN {
+            allowed["host"] = 1
+            allowed["hostname"] = 1
+            allowed["user"] = 1
+            allowed["port"] = 1
+            allowed["identityfile"] = 1
+            allowed["identitiesonly"] = 1
+            allowed["preferredauthentications"] = 1
+            allowed["passwordauthentication"] = 1
+            allowed["kbdinteractiveauthentication"] = 1
+            allowed["stricthostkeychecking"] = 1
+            allowed["userknownhostsfile"] = 1
+            allowed["serveraliveinterval"] = 1
+            allowed["serveralivecountmax"] = 1
+            allowed["tcpkeepalive"] = 1
+            allowed["compression"] = 1
+        }
+        /^[[:space:]]*($|#)/ {next}
+        {
+            directive = tolower($1)
+            if (!allowed[directive]) print FNR ":" $1
+        }
+    ' "$config")"
+    [[ -z "$invalid" ]] || {
+        printf 'Refusing imported SSH config; unexpected directives:\n%s\n' "$invalid" >&2
+        die "Review the Archpad SSH config allowlist before importing it"
+    }
 }
 
 install_hosts_fragment() {
@@ -117,7 +156,8 @@ install_hosts_fragment() {
     [[ -s "$fragment" ]] || return 0
 
     temporary_file="$(mktemp "${TMPDIR:-/tmp}/macos-hosts.XXXXXX")"
-    backup="/etc/hosts.dotfiles-backup.$(date +%Y%m%d%H%M%S)"
+    trap 'rm -f "$temporary_file"' EXIT
+    backup="${BACKUP_DIR}/hosts.$(date +%Y%m%d%H%M%S)"
     awk '
         $0 == "# BEGIN dotfiles-macos" {skip=1; next}
         $0 == "# END dotfiles-macos" {skip=0; next}
@@ -130,9 +170,10 @@ install_hosts_fragment() {
     } >>"$temporary_file"
 
     info "Installing a managed custom block in /etc/hosts"
-    sudo cp /etc/hosts "$backup"
+    install -m 600 /etc/hosts "$backup"
     sudo install -o root -g wheel -m 644 "$temporary_file" /etc/hosts
     rm -f "$temporary_file"
+    trap - EXIT
     printf 'Backup: %s\n' "$backup"
 }
 
@@ -148,11 +189,11 @@ authorize_key_via_archpad() {
 
     info "Authorizing the Mac key on ${remote_alias} through Archpad"
     ssh "$ARCHPAD_ALIAS" \
-        "ssh '${remote_alias}' 'umask 077; mkdir -p ~/.ssh; touch ~/.ssh/authorized_keys; key=\$(cat); grep -qxF \"\$key\" ~/.ssh/authorized_keys || printf \"%s\\n\" \"\$key\" >> ~/.ssh/authorized_keys'" \
+        "ssh '${remote_alias}' 'umask 077; mkdir -p ~/.ssh; touch ~/.ssh/authorized_keys; key=\$(cat); grep -qxF \"\$key\" ~/.ssh/authorized_keys || printf \"\\n%s\\n\" \"\$key\" >> ~/.ssh/authorized_keys'" \
         <"$public_key"
 }
 
-install -d -m 700 "${HOME}/.ssh" "$PRIVATE_SSH_DIR" "$PRIVATE_ROOT"
+install -d -m 700 "${HOME}/.ssh" "$PRIVATE_SSH_DIR" "$PRIVATE_ROOT" "$BACKUP_DIR"
 machine_name="$(scutil --get ComputerName 2>/dev/null || hostname -s)"
 generate_key archpad_ed25519 "${USER}@${machine_name}-archpad"
 generate_key id_ed25519 "${USER}@${machine_name}"
