@@ -115,6 +115,17 @@ To start the split OpenVPN profile:
 run-openvpn-split
 ```
 
+To wake ArchPC while the Mac is connected to the home LAN:
+
+```sh
+wake-archpc
+```
+
+The command sends the existing ArchPC magic packet to the local broadcast on
+UDP ports 9 and 7. Direct Wake-on-LAN broadcast forwarding through the router's
+OpenVPN connection is not assumed; use a permanently online LAN host as a relay
+for reliable wake-up from outside the home network.
+
 ## Post-install checks
 
 - Approve Yabai, skhd, and Kitty/Terminal in Privacy & Security → Accessibility.
