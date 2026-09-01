@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+case "${1:-}" in
+    lock)
+        exec osascript -e 'tell application "System Events" to key code 12 using {control down, command down}'
+        ;;
+    spotlight)
+        exec osascript -e 'tell application "System Events" to key code 49 using command down'
+        ;;
+    mission-control)
+        exec open -a "Mission Control"
+        ;;
+    *)
+        printf 'usage: %s {lock|spotlight|mission-control}\n' "$0" >&2
+        exit 64
+        ;;
+esac

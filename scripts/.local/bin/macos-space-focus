@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+workspace="${1:-}"
+case "$workspace" in
+    1) keycode=18 ;;
+    2) keycode=19 ;;
+    3) keycode=20 ;;
+    4) keycode=21 ;;
+    5) keycode=23 ;;
+    6) keycode=22 ;;
+    7) keycode=26 ;;
+    8) keycode=28 ;;
+    9) keycode=25 ;;
+    10) keycode=29 ;;
+    *) printf 'usage: %s <1-10>\n' "$0" >&2; exit 64 ;;
+esac
+
+if command -v yabai >/dev/null 2>&1 && yabai -m space --focus "$workspace" 2>/dev/null; then
+    exit 0
+fi
+
+# SIP-safe fallback. Enable Control+1…0 in Keyboard Shortcuts → Mission Control.
+exec osascript -e "tell application \"System Events\" to key code ${keycode} using control down"

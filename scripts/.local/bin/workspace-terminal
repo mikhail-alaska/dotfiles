@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    exec open -na Kitty
+fi
+
+exec kitty --class workspace-terminal --title terminal

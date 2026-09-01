@@ -1,0 +1,45 @@
+# Hyprland SUPER becomes macOS Option/Alt.
+alt - return : open -na Kitty
+alt - q      : yabai -m window --close
+alt - e      : open -a Finder
+alt - v      : yabai -m window --toggle float
+alt - x      : "$HOME/.local/bin/macos-system-action" lock
+alt - r      : "$HOME/.local/bin/macos-system-action" spotlight
+alt - g      : "$HOME/.local/bin/macos-system-action" mission-control
+alt - p      : yabai -m window --toggle split
+
+# Vim-style focus.
+alt - h : yabai -m window --focus west
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - l : yabai -m window --focus east
+
+# Vim-style swap.
+alt + shift - h : yabai -m window --swap west
+alt + shift - j : yabai -m window --swap south
+alt + shift - k : yabai -m window --swap north
+alt + shift - l : yabai -m window --swap east
+
+# Spaces 1–10. macos-space-focus falls back to native Control+number shortcuts.
+alt - 1 : "$HOME/.local/bin/macos-space-focus" 1
+alt - 2 : "$HOME/.local/bin/macos-space-focus" 2
+alt - 3 : "$HOME/.local/bin/macos-space-focus" 3
+alt - 4 : "$HOME/.local/bin/macos-space-focus" 4
+alt - 5 : "$HOME/.local/bin/macos-space-focus" 5
+alt - 6 : "$HOME/.local/bin/macos-space-focus" 6
+alt - 7 : "$HOME/.local/bin/macos-space-focus" 7
+alt - 8 : "$HOME/.local/bin/macos-space-focus" 8
+alt - 9 : "$HOME/.local/bin/macos-space-focus" 9
+alt - 0 : "$HOME/.local/bin/macos-space-focus" 10
+
+# Move the focused window and follow it. This works without the scripting addition.
+alt + shift - 1 : yabai -m window --space 1 --focus
+alt + shift - 2 : yabai -m window --space 2 --focus
+alt + shift - 3 : yabai -m window --space 3 --focus
+alt + shift - 4 : yabai -m window --space 4 --focus
+alt + shift - 5 : yabai -m window --space 5 --focus
+alt + shift - 6 : yabai -m window --space 6 --focus
+alt + shift - 7 : yabai -m window --space 7 --focus
+alt + shift - 8 : yabai -m window --space 8 --focus
+alt + shift - 9 : yabai -m window --space 9 --focus
+alt + shift - 0 : yabai -m window --space 10 --focus

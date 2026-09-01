@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -u
+
+CONFIG_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_DIR="${CONFIG_DIR}/plugins"
+source "${CONFIG_DIR}/colors.sh"
+
+sketchybar --bar \
+    position=top \
+    height=34 \
+    margin=10 \
+    y_offset=5 \
+    corner_radius=13 \
+    blur_radius=24 \
+    color="$BAR_COLOR" \
+    shadow=on \
+    sticky=on \
+    topmost=window
+
+default=(
+    icon.font="JetBrainsMono Nerd Font:Bold:16.0"
+    label.font="JetBrainsMono Nerd Font:Medium:14.0"
+    icon.color="$TEXT_COLOR"
+    label.color="$TEXT_COLOR"
+    background.color="$TRANSPARENT"
+    background.corner_radius=10
+    background.height=26
+    padding_left=5
+    padding_right=5
+    icon.padding_left=5
+    icon.padding_right=3
+    label.padding_left=3
+    label.padding_right=5
+)
+sketchybar --default "${default[@]}"
+
+for sid in {1..10}; do
+    sketchybar --add space "space.${sid}" left \
+        --set "space.${sid}" \
+        space="$sid" \
+        icon="$sid" \
+        label.drawing=off \
+        background.color="$ITEM_BG_COLOR" \
+        script="${PLUGIN_DIR}/space.sh" \
+        click_script="${HOME}/.local/bin/macos-space-focus ${sid}"
+done
+
+sketchybar --add item front_app left \
+    --set front_app \
+    icon.drawing=off \
+    label.max_chars=40 \
+    label.color="$SUBTEXT_COLOR" \
+    script="${PLUGIN_DIR}/front_app.sh" \
+    --subscribe front_app front_app_switched
+
+sketchybar --add item volume right \
+    --set volume script="${PLUGIN_DIR}/volume.sh" update_freq=5 \
+    --subscribe volume volume_change
+
+sketchybar --add item wifi right \
+    --set wifi script="${PLUGIN_DIR}/wifi.sh" update_freq=15
+
+sketchybar --add item battery right \
+    --set battery script="${PLUGIN_DIR}/battery.sh" update_freq=60 \
+    --subscribe battery power_source_change system_woke
+
+sketchybar --add item clock right \
+    --set clock icon="󰥔" script="${PLUGIN_DIR}/clock.sh" update_freq=10
+
+sketchybar --update

@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly ARCHPAD_ALIAS="archpad"
+readonly ARCHPAD_ADDRESS="192.168.0.22"
+readonly ARCHPAD_FINGERPRINT="SHA256:hKLaz9Hr0zTPLlQvI99OcrTJGcj1w7WrHk7mR7+Jwq0"
+readonly PRIVATE_ROOT="${HOME}/.local/share/dotfiles-private"
+readonly PRIVATE_SSH_DIR="${HOME}/.ssh/private.d"
+readonly ARCHPAD_KNOWN_HOSTS="${HOME}/.ssh/known_hosts.archpad"
+
+[[ "$(uname -s)" == "Darwin" ]] || {
+    printf '%s\n' 'migrate-from-archpad is intended to run on macOS.' >&2
+    exit 69
+}
+
+info() { printf '\n==> %s\n' "$*"; }
+warn() { printf 'WARNING: %s\n' "$*" >&2; }
+die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+
+prompt_yes_no() {
+    local prompt="$1"
+    local reply
+    read -r -p "${prompt} [y/N] " reply
+    [[ "$reply" == "y" || "$reply" == "Y" ]]
+}
+
+generate_key() {
+    local name="$1"
+    local comment="$2"
+    local path="${HOME}/.ssh/${name}"
+
+    if [[ -e "$path" || -e "${path}.pub" ]]; then
+        [[ -f "$path" && -f "${path}.pub" ]] || die "Incomplete key pair: ${path}"
+        info "Keeping existing key pair ${path}"
+        return
+    fi
+
+    info "Generating ${path}; enter a passphrase when ssh-keygen asks"
+    ssh-keygen -t ed25519 -a 100 -f "$path" -C "$comment"
+    chmod 600 "$path"
+    chmod 644 "${path}.pub"
+}
+
+pin_archpad_host_key() {
+    local temporary_dir scan_file observed
+    temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/archpad-hostkey.XXXXXX")"
+    scan_file="${temporary_dir}/known_hosts"
+    trap 'rm -rf "$temporary_dir"' RETURN
+
+    info "Reading Archpad ED25519 host key from ${ARCHPAD_ADDRESS}"
+    ssh-keyscan -T 5 -t ed25519 "$ARCHPAD_ADDRESS" >"$scan_file" 2>/dev/null || \
+        die "Could not read the Archpad SSH host key"
+    observed="$(ssh-keygen -lf "$scan_file" -E sha256 | awk 'NR == 1 {print $2}')"
+    [[ "$observed" == "$ARCHPAD_FINGERPRINT" ]] || {
+        printf 'Expected: %s\nObserved: %s\n' "$ARCHPAD_FINGERPRINT" "$observed" >&2
+        die "Archpad host-key fingerprint mismatch; refusing the connection"
+    }
+
+    install -m 600 "$scan_file" "$ARCHPAD_KNOWN_HOSTS"
+    info "Pinned verified Archpad fingerprint ${observed}"
+    trap - RETURN
+    rm -rf "$temporary_dir"
+}
+
+authorize_archpad_key() {
+    local ssh_copy_id
+    if ssh -o BatchMode=yes "$ARCHPAD_ALIAS" true >/dev/null 2>&1; then
+        info "Public-key access to Archpad already works"
+        return
+    fi
+
+    ssh_copy_id="$(command -v ssh-copy-id || true)"
+    if [[ -z "$ssh_copy_id" ]] && command -v brew >/dev/null 2>&1; then
+        ssh_copy_id="$(brew --prefix ssh-copy-id 2>/dev/null)/bin/ssh-copy-id"
+    fi
+    [[ -x "$ssh_copy_id" ]] || die "ssh-copy-id is unavailable; run brew bundle first"
+
+    info "Installing the Mac public key on alaska@${ARCHPAD_ADDRESS}"
+    printf '%s\n' 'The next prompt is the current Archpad account password.'
+    "$ssh_copy_id" -i "${HOME}/.ssh/archpad_ed25519.pub" "$ARCHPAD_ALIAS"
+    ssh -o BatchMode=yes "$ARCHPAD_ALIAS" true || die "Archpad key login did not pass verification"
+}
+
+copy_private_material() {
+    local temporary_dir remote_hosts remote_system_hosts fragment
+    temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/archpad-import.XXXXXX")"
+    trap 'rm -rf "$temporary_dir"' RETURN
+    remote_hosts="${temporary_dir}/ssh-hosts.conf"
+    remote_system_hosts="${temporary_dir}/hosts"
+    fragment="${PRIVATE_ROOT}/hosts.fragment"
+
+    install -d -m 700 "$PRIVATE_ROOT" "${PRIVATE_ROOT}/openvpn" "$PRIVATE_SSH_DIR"
+
+    info "Copying the embedded-key OpenVPN profile outside Git"
+    scp -p "${ARCHPAD_ALIAS}:/home/alaska/projects/rpi/OpenVPN-Config.ovpn" \
+        "${PRIVATE_ROOT}/openvpn/OpenVPN-Config.ovpn"
+    chmod 600 "${PRIVATE_ROOT}/openvpn/OpenVPN-Config.ovpn"
+
+    info "Copying host-specific SSH configuration outside Git"
+    scp -p "${ARCHPAD_ALIAS}:/home/alaska/.ssh/config" "$remote_hosts"
+    install -m 600 "$remote_hosts" "${PRIVATE_SSH_DIR}/hosts.conf"
+
+    info "Importing only custom Archpad /etc/hosts entries"
+    scp "${ARCHPAD_ALIAS}:/etc/hosts" "$remote_system_hosts"
+    awk '$0 ~ /(^|[[:space:]])(smol\.thm|ai\.archpc\.home\.arpa)([[:space:]]|$)/ {print}' \
+        "$remote_system_hosts" >"$fragment"
+    chmod 600 "$fragment"
+    [[ -s "$fragment" ]] || warn "No expected custom hosts entries were found"
+
+    trap - RETURN
+    rm -rf "$temporary_dir"
+}
+
+install_hosts_fragment() {
+    local fragment="${PRIVATE_ROOT}/hosts.fragment"
+    local temporary_file backup
+    [[ -s "$fragment" ]] || return 0
+
+    temporary_file="$(mktemp "${TMPDIR:-/tmp}/macos-hosts.XXXXXX")"
+    backup="/etc/hosts.dotfiles-backup.$(date +%Y%m%d%H%M%S)"
+    awk '
+        $0 == "# BEGIN dotfiles-macos" {skip=1; next}
+        $0 == "# END dotfiles-macos" {skip=0; next}
+        !skip {print}
+    ' /etc/hosts >"$temporary_file"
+    {
+        printf '\n# BEGIN dotfiles-macos\n'
+        cat "$fragment"
+        printf '# END dotfiles-macos\n'
+    } >>"$temporary_file"
+
+    info "Installing a managed custom block in /etc/hosts"
+    sudo cp /etc/hosts "$backup"
+    sudo install -o root -g wheel -m 644 "$temporary_file" /etc/hosts
+    rm -f "$temporary_file"
+    printf 'Backup: %s\n' "$backup"
+}
+
+authorize_key_via_archpad() {
+    local remote_alias="$1"
+    local public_key="$2"
+    [[ "$remote_alias" =~ ^[A-Za-z0-9._-]+$ ]] || die "Unsafe SSH alias: ${remote_alias}"
+    [[ -f "$public_key" ]] || die "Missing public key: ${public_key}"
+
+    if ! prompt_yes_no "Install $(basename "$public_key") on ${remote_alias} through Archpad?"; then
+        return
+    fi
+
+    info "Authorizing the Mac key on ${remote_alias} through Archpad"
+    ssh "$ARCHPAD_ALIAS" \
+        "ssh '${remote_alias}' 'umask 077; mkdir -p ~/.ssh; touch ~/.ssh/authorized_keys; key=\$(cat); grep -qxF \"\$key\" ~/.ssh/authorized_keys || printf \"%s\\n\" \"\$key\" >> ~/.ssh/authorized_keys'" \
+        <"$public_key"
+}
+
+install -d -m 700 "${HOME}/.ssh" "$PRIVATE_SSH_DIR" "$PRIVATE_ROOT"
+machine_name="$(scutil --get ComputerName 2>/dev/null || hostname -s)"
+generate_key archpad_ed25519 "${USER}@${machine_name}-archpad"
+generate_key id_ed25519 "${USER}@${machine_name}"
+generate_key vpn_ed25519 "${USER}@${machine_name}-vpn"
+generate_key 3xui "${USER}@${machine_name}-3xui"
+
+pin_archpad_host_key
+authorize_archpad_key
+
+for key in archpad_ed25519 id_ed25519 vpn_ed25519 3xui; do
+    ssh-add --apple-use-keychain "${HOME}/.ssh/${key}" || \
+        warn "Could not add ${key} to the Apple keychain"
+done
+
+copy_private_material
+install_hosts_fragment
+
+authorize_key_via_archpad vpn-spb "${HOME}/.ssh/vpn_ed25519.pub"
+authorize_key_via_archpad vpn-ger "${HOME}/.ssh/vpn_ed25519.pub"
+authorize_key_via_archpad archpc "${HOME}/.ssh/id_ed25519.pub"
+
+info "Migration complete"
+printf '%s\n' \
+    "Private SSH config: ${PRIVATE_SSH_DIR}/hosts.conf" \
+    "Private OpenVPN profile: ${PRIVATE_ROOT}/openvpn/OpenVPN-Config.ovpn" \
+    'Old SSH private keys were not copied from Archpad.'

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly DEFAULT_CONFIG="${HOME}/.local/share/dotfiles-private/openvpn/OpenVPN-Config.ovpn"
+ovpn_config="${DOTFILES_OPENVPN_CONFIG:-${DEFAULT_CONFIG}}"
+openvpn_bin="${OPENVPN_BIN:-}"
+force_local=0
+openvpn_args=()
+
+while (($#)); do
+    case "$1" in
+        --force-local)
+            force_local=1
+            shift
+            ;;
+        --config)
+            [[ $# -ge 2 ]] || { printf '%s\n' '--config needs a path' >&2; exit 64; }
+            ovpn_config="$2"
+            shift 2
+            ;;
+        --openvpn-bin)
+            [[ $# -ge 2 ]] || { printf '%s\n' '--openvpn-bin needs a path' >&2; exit 64; }
+            openvpn_bin="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            openvpn_args+=("$@")
+            break
+            ;;
+        *)
+            openvpn_args+=("$1")
+            shift
+            ;;
+    esac
+done
+
+[[ "$(uname -s)" == "Darwin" ]] || {
+    printf '%s\n' 'This launcher is the macOS variant; use the Linux script on Archpad.' >&2
+    exit 69
+}
+[[ -r "$ovpn_config" ]] || {
+    printf 'OpenVPN profile not found: %s\nRun migrate-from-archpad first.\n' "$ovpn_config" >&2
+    exit 66
+}
+
+if [[ -z "$openvpn_bin" ]]; then
+    openvpn_bin="$(command -v openvpn || true)"
+fi
+[[ -x "$openvpn_bin" ]] || { printf '%s\n' 'openvpn is not installed or not executable' >&2; exit 69; }
+
+grep -Eq '^[[:space:]]*route-nopull([[:space:]]|$)' "$ovpn_config" || {
+    printf '%s\n' 'Refusing to run a profile without route-nopull.' >&2
+    exit 65
+}
+
+if ((force_local == 0)) && curl --noproxy '*' --silent --fail \
+    --connect-timeout 1 --max-time 2 \
+    http://192.168.0.222:18080/health >/dev/null 2>&1; then
+    printf '%s\n' \
+        'ArchPC/Open WebUI is already reachable directly on the local network.' \
+        'OpenVPN was not started. Open http://192.168.0.222:18080 instead.' \
+        "For a deliberate local VPN test, run: $0 --force-local"
+    exit 0
+fi
+
+if ((EUID != 0)); then
+    exec sudo -- "$0" --config "$ovpn_config" --openvpn-bin "$openvpn_bin" -- "${openvpn_args[@]}"
+fi
+
+# OpenVPN owns the utun routes and removes them when it exits. The profile has
+# route-nopull plus explicit /32 routes, replacing Linux-only `ip rule` logic.
+exec "$openvpn_bin" --config "$ovpn_config" "${openvpn_args[@]}"

@@ -1,1 +1,13 @@
 sing-box/
+
+# Secrets and machine-local material must never enter this public repository.
+private/
+private.d/
+*.private.conf
+*.ovpn
+*.key
+*.pem
+auth.json
+.env
+id_*
+known_hosts*

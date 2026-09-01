@@ -1,0 +1,14 @@
+#!/bin/sh
+
+printf '\033[1;35m  tmux — quick help\033[0m\n\n'
+printf '  First press \033[1;36mCtrl+Space\033[0m (or Ctrl+b), release it, then press:\n\n'
+printf '  \033[1;34mc\033[0m     new window          \033[1;34mn / p\033[0m next / previous window\n'
+printf '  \033[1;34m|\033[0m     split side-by-side  \033[1;34m-\033[0m     split top / bottom\n'
+printf '  \033[1;34mh j k l\033[0m move between panes   \033[1;34mH J K L\033[0m resize pane\n'
+printf '  \033[1;34mx\033[0m     close pane          \033[1;34m&\033[0m     close window\n'
+printf '  \033[1;34md\033[0m     detach safely       \033[1;34m[\033[0m     history/copy mode\n'
+printf '  \033[1;34mr\033[0m     reload config       \033[1;34m?\033[0m     this help\n\n'
+printf '  Mouse: click a pane, drag borders, use the wheel for history.\n'
+printf '  Return later with: \033[1;36mtmux attach -t main\033[0m\n\n'
+printf '  Press Enter to close... '
+read -r _

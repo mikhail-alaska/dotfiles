@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+# SIP-safe baseline: no scripting addition, sudoers entry, or private Dock APIs.
+yabai -m config layout bsp
+yabai -m config top_padding 5
+yabai -m config bottom_padding 5
+yabai -m config left_padding 5
+yabai -m config right_padding 5
+yabai -m config window_gap 5
+yabai -m config split_ratio 0.50
+yabai -m config auto_balance off
+yabai -m config window_placement second_child
+yabai -m config window_origin_display cursor
+
+yabai -m config focus_follows_mouse autofocus
+yabai -m config mouse_follows_focus off
+yabai -m config mouse_modifier alt
+yabai -m config mouse_action1 move
+yabai -m config mouse_action2 resize
+yabai -m config mouse_drop_action swap
+
+# Reserve room for SketchyBar while retaining Hyprland-like outer gaps.
+yabai -m config external_bar all:39:5
+
+# System utilities and transient dialogs should retain native placement.
+yabai -m rule --add app="^System Settings$" manage=off
+yabai -m rule --add app="^System Information$" manage=off
+yabai -m rule --add app="^Activity Monitor$" manage=off
+yabai -m rule --add app="^Calculator$" manage=off
+yabai -m rule --add app="^Archive Utility$" manage=off
+yabai -m rule --add app="^Software Update$" manage=off
+yabai -m rule --add app="^Finder$" title="^(Copy|Move|Connect|Info|Preferences)" manage=off
+yabai -m rule --add app=".*" title="^(Open|Save|Choose)( File)?$" manage=off
+
+# Preserve the current login layout. Creating ten Spaces remains a one-time,
+# native Mission Control step while SIP is enabled.
+yabai -m rule --add app="^Firefox$" space=2
+yabai -m rule --add app="^Telegram$" space=3

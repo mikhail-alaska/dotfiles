@@ -44,7 +44,9 @@ return {
       -- process_cmd = "convert - -quality 75 webp:-", ---@type string
 
       extension = "png", ---@type string
-      process_cmd = "convert - -quality 75 png:-", ---@type string
+      process_cmd = vim.fn.executable("magick") == 1
+          and "magick - -quality 75 png:-"
+          or "convert - -quality 75 png:-", ---@type string
 
       -- extension = "jpg", ---@type string
       -- process_cmd = "convert - -quality 75 jpg:-", ---@type string

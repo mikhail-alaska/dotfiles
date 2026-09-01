@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Mirror the useful part of the Hyprland login layout. Yabai rules place the
+# applications after the ten native Spaces have been created once.
+sleep 3
+open -na Kitty
+sleep 2
+open -a Firefox
+sleep 3
+open -a Telegram

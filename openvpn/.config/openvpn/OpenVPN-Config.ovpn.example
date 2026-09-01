@@ -1,0 +1,18 @@
+# Public template only. Never put certificates, private keys, or credentials here.
+client
+dev tun
+proto udp
+nobind
+route-nopull
+pull-filter ignore "redirect-gateway"
+pull-filter ignore "dhcp-option DNS"
+pull-filter ignore "block-outside-dns"
+route 192.168.0.1 255.255.255.255
+route 192.168.0.222 255.255.255.255
+resolv-retry infinite
+remote-cert-tls server
+persist-key
+persist-tun
+
+# The real profile is copied from Archpad to:
+# ~/.local/share/dotfiles-private/openvpn/OpenVPN-Config.ovpn

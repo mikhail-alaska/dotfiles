@@ -1,112 +1,94 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [ $TERM = "xterm-256color" ] ; then
-else
+# Shared interactive shell configuration for Arch Linux and macOS.
+
+if [[ -o interactive ]] && command -v fastfetch >/dev/null 2>&1 && [[ "$TERM" != "xterm-256color" ]]; then
     fastfetch
 fi
 
+export PATH="$HOME/.local/bin:$PATH"
 
-
-
-
-
-
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-
-
-# Download Zinit, if it's not there yet
-if [ ! -d "$ZINIT_HOME" ]; then
-   mkdir -p "$(dirname $ZINIT_HOME)"
-   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+if [[ "$(uname -s)" == "Darwin" ]] && [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    export PATH="/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/ssh-copy-id/bin:$PATH"
 fi
 
-# Source/Load zinit
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+if [[ ! -d "$ZINIT_HOME" ]]; then
+    mkdir -p "${ZINIT_HOME:h}"
+    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
 source "${ZINIT_HOME}/zinit.zsh"
 
-# Add in Powerlevel10k
-#zinit ice depth=1; zinit light romkatv/powerlevel10k
-
-# Add in zsh plugins
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
-
-# Add in snippets
 zinit snippet OMZP::git
 zinit snippet OMZP::sudo
-zinit snippet OMZP::archlinux
-# Load completions
+if [[ "$(uname -s)" == "Linux" ]]; then
+    zinit snippet OMZP::archlinux
+fi
+
 autoload -Uz compinit && compinit
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-#[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-
-# Keybindings
 bindkey -e
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 
-# History
 HISTSIZE=100000
-HISTFILE=~/.zsh_history
+HISTFILE="$HOME/.zsh_history"
 SAVEHIST=100000
 HISTDUP=erase
-setopt appendhistory
-setopt sharehistory
-setopt hist_ignore_space
-setopt hist_ignore_all_dups
-setopt hist_save_no_dups
-setopt hist_ignore_dups
-setopt hist_find_no_dups
+setopt appendhistory sharehistory hist_ignore_space hist_ignore_all_dups
+setopt hist_save_no_dups hist_ignore_dups hist_find_no_dups
 
-
-
-# Completion styling
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+if [[ -n "${LS_COLORS:-}" ]]; then
+    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+fi
 zstyle ':completion:*' menu no
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
-zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls $realpath'
 
-
-# Aliases
-alias vpn='nekoray'
-alias sing='sing-box run -c ~/.config/sing-box/config.json'
-alias ls='ls --color'
 alias ll='ls -lAtr'
 alias vim='nvim'
 alias c='clear'
 alias inv='nvim $(fzf -m --preview="bat --color=always {}")'
-alias wpscan='/home/alaska/.local/share/gem/ruby/3.3.0/bin/wpscan'
-alias lock='hyprlock'
-# Shell integrations
-eval "$(fzf --zsh)"
-eval "$(zoxide init --cmd cd zsh)"
 
-export PATH="$HOME/.local/bin:$PATH"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    alias ls='ls -G'
+    alias lock='macos-system-action lock'
+    alias vpn='run-openvpn-split'
+else
+    alias ls='ls --color=auto'
+    alias lock='hyprlock'
+    alias vpn='nekoray'
+    alias sing='sing-box run -c ~/.config/sing-box/config.json'
+    alias wpscan="$HOME/.local/share/gem/ruby/3.3.0/bin/wpscan"
+fi
 
-## [Completion]
-## Completion scripts setup. Remove the following line to uninstall
-[[ -f /home/alaska/.dart-cli-completion/zsh-config.zsh ]] && . /home/alaska/.dart-cli-completion/zsh-config.zsh || true
-## [/Completion]
+if command -v fzf >/dev/null 2>&1; then
+    eval "$(fzf --zsh)"
+fi
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init --cmd cd zsh)"
+fi
 
+[[ -f "$HOME/.dart-cli-completion/zsh-config.zsh" ]] && \
+    source "$HOME/.dart-cli-completion/zsh-config.zsh"
 
-# bun completions
-[ -s "/home/alaska/.bun/_bun" ] && source "/home/alaska/.bun/_bun"
-
-# bun
+if [[ -s "$HOME/.bun/_bun" ]]; then
+    source "$HOME/.bun/_bun"
+fi
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# To customize prompt, run `p10k configure` or edit ~/dotfiles/p10k/.p10k.zsh.
-#[[ ! -f ~/dotfiles/p10k/.p10k.zsh ]] || source ~/dotfiles/p10k/.p10k.zsh
-eval "$(starship init zsh)"
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init zsh)"
+fi
 
-# Catppuccin Mocha palette for libnewt applications (nmtui, whiptail).
-export NEWT_COLORS='
+# Catppuccin Mocha palette for libnewt applications on Linux.
+if [[ "$(uname -s)" == "Linux" ]]; then
+    export NEWT_COLORS='
 root=#cdd6f4,#1e1e2e
 border=#cba6f7,#1e1e2e
 window=#cdd6f4,#1e1e2e
@@ -131,3 +113,4 @@ compactbutton=#cba6f7,#1e1e2e
 actsellistbox=#1e1e2e,#cba6f7
 sellistbox=#cba6f7,#313244
 '
+fi
